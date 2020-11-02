@@ -117,17 +117,20 @@ public class Paxos implements PaxosRMI, Runnable{
     // RMI handler
     public Response Prepare(Request req){
         // your code here
-
+        
+        return null;
     }
 
     public Response Accept(Request req){
         // your code here
 
+        return null;
     }
 
     public Response Decide(Request req){
         // your code here
 
+        return null;
     }
 
     /**
@@ -148,6 +151,8 @@ public class Paxos implements PaxosRMI, Runnable{
      */
     public int Max(){
         // Your code here
+
+        return 0;
     }
 
     /**
@@ -181,6 +186,7 @@ public class Paxos implements PaxosRMI, Runnable{
     public int Min(){
         // Your code here
 
+        return 0;
     }
 
 
@@ -195,6 +201,7 @@ public class Paxos implements PaxosRMI, Runnable{
     public retStatus Status(int seq){
         // Your code here
 
+        return null;
     }
 
     /**
