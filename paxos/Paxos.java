@@ -37,7 +37,7 @@ public class Paxos implements PaxosRMI, Runnable{
         private int _paxosNumPeer;
         private int _currentMultiplier;
         private int _currentPropNum;
-    
+
         public PropNumGenerator(int paxosPeerID, int paxosNumPeer)
         {
             this._paxosPeerID  = paxosPeerID;
@@ -45,7 +45,7 @@ public class Paxos implements PaxosRMI, Runnable{
             this._currentMultiplier = 0;
             this._currentPropNum = paxosPeerID; // must be unique
         }
-    
+
         public int getCurrentPropNum() {return this._currentPropNum;}
         public synchronized int getNextPropNum() // Threadsafe
         {
@@ -54,19 +54,19 @@ public class Paxos implements PaxosRMI, Runnable{
             return this._currentPropNum;
         }
     }
-    
-    private class PaxosAgreementInstance 
+
+    private class PaxosAgreementInstance
     {
         // This class hold information about each agreement instances.
         // A new instance of PaxosAgreementInstance will be created when calling Start().
         // Each instance will run on its own thread and thus multiple instances can run concurrently.
-        private State _agreementstate; 
+        private State _agreementstate;
         private int _highestPropNumResponded;
         private int _highestPropNumAccepted;
         private Object _propValwithHighestPropNumAccepted;
         private Object _propValAssigned;
         private ReentrantLock _mutex;
-    
+
         // Constructor
         public PaxosAgreementInstance(Object propValAssigned)
         {
@@ -77,14 +77,14 @@ public class Paxos implements PaxosRMI, Runnable{
             this._propValAssigned = propValAssigned;
             this._mutex = new ReentrantLock();
         }
-    
+
         // Getter
         public State getAgreementState() {return this._agreementstate;}
         public int getHighestPropNumResponded() {return this._highestPropNumResponded;}
         public int getHighestPropNumAccepted() {return this._highestPropNumResponded;}
         public Object getPropValwithHighestPropNumAccepted() {return this._propValwithHighestPropNumAccepted;}
         public Object getPropValAssigned() {return this._propValAssigned;}
-    
+
         // Setter
         public void setAgreementState(State agreementstate) {this._agreementstate = agreementstate;}
         public void setHighestPropNumResponded(int highestPropNumResponded) {this._highestPropNumResponded = highestPropNumResponded;}
@@ -108,13 +108,13 @@ public class Paxos implements PaxosRMI, Runnable{
         public void unlock() {this._mutex.unlock();}
     }
 
-    private boolean isMajorityofResponsesOkay(Response[] PaxosPeerResponses) 
+    private boolean isMajorityofResponsesOkay(Response[] PaxosPeerResponses)
     {
         int majorityNumber = (PaxosPeerResponses.length / 2) + 1; // should I handle even or odd case?
         int numofOKResponses = 0;
-        for (Response PaxosPeerResponse : PaxosPeerResponses) 
+        for (Response PaxosPeerResponse : PaxosPeerResponses)
         {
-            if (PaxosPeerResponse != null && PaxosPeerResponse.getStatus()) 
+            if (PaxosPeerResponse != null && PaxosPeerResponse.getStatus())
             {
                 numofOKResponses = numofOKResponses + 1;
             }
@@ -125,13 +125,13 @@ public class Paxos implements PaxosRMI, Runnable{
         return result;
     }
 
-    private Object findPropValwithHighestPropNum(Response[] PaxosPeerResponses, Object propValAssigned) 
+    private Object findPropValwithHighestPropNum(Response[] PaxosPeerResponses, Object propValAssigned)
     {
         Object PropValwithHighestPropNum = null;
         // Find the highest proposal number
 
         int HighestPropNum = -1;
-        for (Response PaxosPeerResponse : PaxosPeerResponses) 
+        for (Response PaxosPeerResponse : PaxosPeerResponses)
         {
             if (PaxosPeerResponse != null && PaxosPeerResponse.getStatus())
             {
@@ -150,17 +150,17 @@ public class Paxos implements PaxosRMI, Runnable{
         return PropValwithHighestPropNum;
     }
 
-    private void removePaxosAgreementInstances(int minSeqNum) 
+    private void removePaxosAgreementInstances(int minSeqNum)
     {
-        for (int seqNum : Set.copyOf(this._paxosAgreementInstances.keySet())) 
+        for (int seqNum : Set.copyOf(this._paxosAgreementInstances.keySet()))
         {
-            if (seqNum < minSeqNum) 
-            { 
-                this._paxosAgreementInstances.remove(seqNum); 
+            if (seqNum < minSeqNum)
+            {
+                this._paxosAgreementInstances.remove(seqNum);
             }
         }
     }
-    
+
     // This is used to generate unique proposal number
     private PropNumGenerator _propNumGenerator;
 
@@ -179,7 +179,7 @@ public class Paxos implements PaxosRMI, Runnable{
 
     // This array is used to store the maximum sequence number that have been seen from each Paxos Peers.
     private int[] _maxSeqNumfromAllPaxosPeers;
-    
+
     /**
      * Call the constructor to create a Paxos peer.
      * The hostnames of all the Paxos peers (including this one)
@@ -277,19 +277,19 @@ public class Paxos implements PaxosRMI, Runnable{
         // Check whether seq is less than Min().
         // if yes, then Start() should exit prematurely.
         if(seq < Min()) {return;}
-        
+
         // acquire lock
-        this.mutex.lock(); 
-        
+        this.mutex.lock();
+
         // set maximum sequence number seen by this peer
-        this._maxSeq = Math.max(seq, this._maxSeq); 
-        
+        this._maxSeq = Math.max(seq, this._maxSeq);
+
         // Create new paxos Agreement Thread in which Agreement Instance will run
         Thread paxosAgreementThread = new Thread(this);
         this._paxosAgreementThreads.put(paxosAgreementThread.getId(), seq);
 
         PaxosAgreementInstance paxosAgreementInstance;
-        
+
         // Create new paxos Agreement Instance in which Agreement will be done
         if(!this._paxosAgreementInstances.containsKey(seq))
         {
@@ -308,7 +308,7 @@ public class Paxos implements PaxosRMI, Runnable{
         paxosAgreementThread.start();
 
         // release lock
-        this.mutex.unlock(); 
+        this.mutex.unlock();
     }
 
     @Override
@@ -316,9 +316,11 @@ public class Paxos implements PaxosRMI, Runnable{
         //Your code here
         //This is code for proposer, will run in infinite loop until decided.
         Thread paxosAgreementThread = Thread.currentThread();
+        this.mutex.lock();
         int seqNum = this._paxosAgreementThreads.get(paxosAgreementThread.getId());
         PaxosAgreementInstance paxosAgreementInstance = this._paxosAgreementInstances.get(seqNum);
-        
+        this.mutex.unlock();
+
         // Run Agreement Loop until Decided
         while(paxosAgreementInstance.getAgreementState() != State.Decided)
         {
@@ -342,48 +344,53 @@ public class Paxos implements PaxosRMI, Runnable{
 
             // Check the majority response of the acceptors. If majorities say okay, then proceed to the next step.
             // Otherwise, restart the agreement by generating higher proposal number.
-            if(isMajorityofResponsesOkay(PaxosPeerResponses))
+            if(!isMajorityofResponsesOkay(PaxosPeerResponses))
             {
-                // Find the Highest Proposal Value to propose for current propNum
-                Object PropValwithHighestPropNum = findPropValwithHighestPropNum(PaxosPeerResponses, paxosAgreementInstance.getPropValAssigned());
+                continue;
+            }
 
-                // Send Accept Request to All Peers
-                for(int peerID = 0; peerID < this.peers.length; peerID++)
+            // Find the Highest Proposal Value to propose for current propNum
+            Object PropValwithHighestPropNum = findPropValwithHighestPropNum(PaxosPeerResponses, paxosAgreementInstance.getPropValAssigned());
+
+            // Send Accept Request to All Peers
+            for(int peerID = 0; peerID < this.peers.length; peerID++)
+            {
+                if(peerID == this.me) // call to itself without RMI
                 {
-                    if(peerID == this.me) // call to itself without RMI
-                    {
-                        PaxosPeerResponses[peerID] = Accept(new Request(propNum, PropValwithHighestPropNum, seqNum));
-                    }
-                    else
-                    {
-                        PaxosPeerResponses[peerID] = Call("Accept", new Request(propNum, PropValwithHighestPropNum, seqNum), peerID);
-                    }
+                    PaxosPeerResponses[peerID] = Accept(new Request(propNum, PropValwithHighestPropNum, seqNum));
                 }
-
-                // Check the majority response of the acceptors. If majorities say okay, then proceed to the next step.
-                // Otherwise, restart the agreement by generating higher proposal number.
-                if(isMajorityofResponsesOkay(PaxosPeerResponses))
+                else
                 {
-                    // Send Decide Request to All Peers
-                    for(int peerID = 0; peerID < this.peers.length; peerID++)
-                    {
-                        if(peerID == this.me) // call to itself without RMI
-                        {
-                            PaxosPeerResponses[peerID] = Decide(new Request(propNum, PropValwithHighestPropNum, seqNum));
-                        }
-                        else
-                        {
-                            PaxosPeerResponses[peerID] = Call("Decide", new Request(propNum, PropValwithHighestPropNum, seqNum), peerID);
-                        }
-
-                        // Since the _maxSeqNumfromAllPaxosPeers is piggybacked on Decide Response, we can update this array.
-                        if(PaxosPeerResponses[peerID] != null)
-                        {
-                            this._maxSeqNumfromAllPaxosPeers[peerID] = PaxosPeerResponses[peerID].getMaxSeqNum();
-                        }
-                    }
+                    PaxosPeerResponses[peerID] = Call("Accept", new Request(propNum, PropValwithHighestPropNum, seqNum), peerID);
                 }
             }
+
+            // Check the majority response of the acceptors. If majorities say okay, then proceed to the next step.
+            // Otherwise, restart the agreement by generating higher proposal number.
+            if(!isMajorityofResponsesOkay(PaxosPeerResponses))
+            {
+                continue;
+            }
+
+            // Send Decide Request to All Peers
+            for(int peerID = 0; peerID < this.peers.length; peerID++)
+            {
+                if(peerID == this.me) // call to itself without RMI
+                {
+                    PaxosPeerResponses[peerID] = Decide(new Request(propNum, PropValwithHighestPropNum, seqNum));
+                }
+                else
+                {
+                    PaxosPeerResponses[peerID] = Call("Decide", new Request(propNum, PropValwithHighestPropNum, seqNum), peerID);
+                }
+
+                // Since the _maxSeqNumfromAllPaxosPeers is piggybacked on Decide Response, we can update this array.
+                if(PaxosPeerResponses[peerID] != null)
+                {
+                    this._maxSeqNumfromAllPaxosPeers[peerID] = PaxosPeerResponses[peerID].getMaxSeqNum();
+                }
+            }
+
         }
     }
 
@@ -391,7 +398,7 @@ public class Paxos implements PaxosRMI, Runnable{
     public Response Prepare(Request req){
         // your code here
         // acquire lock
-        this.mutex.lock(); 
+        this.mutex.lock();
 
         // Create new paxos Agreement Instance in which Agreement will be done
         PaxosAgreementInstance paxosAgreementInstance;
@@ -414,15 +421,16 @@ public class Paxos implements PaxosRMI, Runnable{
             paxosAgreementInstance.setHighestPropNumResponded(req.getPropNum());
             ResponseStatus = true;
         }
+        Response resp = new Response(ResponseStatus, paxosAgreementInstance.getHighestPropNumAccepted(), paxosAgreementInstance.getPropValwithHighestPropNumAccepted(), req.getSeqNum(), -1);
         // release lock
         paxosAgreementInstance.unlock();
         this.mutex.unlock();
-        return new Response(ResponseStatus, paxosAgreementInstance.getHighestPropNumAccepted(), paxosAgreementInstance.getPropValwithHighestPropNumAccepted(), req.getSeqNum(), -1);
+        return resp;
     }
 
     public Response Accept(Request req){
         // your code here
-        this.mutex.lock(); 
+        this.mutex.lock();
 
         // Create new paxos Agreement Instance in which Agreement will be done
         PaxosAgreementInstance paxosAgreementInstance;
@@ -454,7 +462,7 @@ public class Paxos implements PaxosRMI, Runnable{
 
     public Response Decide(Request req){
         // your code here
-        this.mutex.lock(); 
+        this.mutex.lock();
 
         // Create new paxos Agreement Instance in which Agreement will be done
         PaxosAgreementInstance paxosAgreementInstance;
@@ -538,8 +546,10 @@ public class Paxos implements PaxosRMI, Runnable{
      */
     public int Min(){
         // Your code here
+        mutex.lock();
         int minSeq = Arrays.stream(this._maxSeqNumfromAllPaxosPeers).min().getAsInt() + 1;
         removePaxosAgreementInstances(minSeq);
+        mutex.unlock();
         return minSeq;
     }
 
@@ -566,6 +576,7 @@ public class Paxos implements PaxosRMI, Runnable{
         }
         else
         {
+            this.mutex.lock();
             PaxosAgreementInstance paxosAgreementInstance;
             if(!this._paxosAgreementInstances.containsKey(seq))
             {
@@ -578,6 +589,7 @@ public class Paxos implements PaxosRMI, Runnable{
             }
             state = paxosAgreementInstance.getAgreementState();
             val = paxosAgreementInstance.getPropValwithHighestPropNumAccepted();
+            this.mutex.unlock();
         }
         return new retStatus(state, val);
     }
