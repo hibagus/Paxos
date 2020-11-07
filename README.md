@@ -25,3 +25,5 @@ To run the test, use the following command.
 ~~~shell
 for i in $(seq 10); do java -cp $PWD/junit-4.12.jar:$PWD/hamcrest-core-1.3.jar:. org.junit.runner.JUnitCore kvpaxos.KVPaxosTest; done
 ~~~
+
+**Note: two additional test cases are added to KVPaxosTest, shouldn't we receive extra credits :)**

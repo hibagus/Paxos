@@ -25,7 +25,7 @@ public class Server implements KVPaxosRMI {
     // Your definitions here
     int seq;
     private Map<String, Integer> _kvs;
-    private Map<String, Integer> _clientSeqs;
+    private Map<Integer, Integer> _clientSeqs;
 
 
     public Server(String[] servers, int[] ports, int me){
@@ -37,7 +37,7 @@ public class Server implements KVPaxosRMI {
         // Your initialization code here
         this.seq = 0;
         this._kvs = new HashMap<String, Integer>();
-        this._clientSeqs = new HashMap<String, Integer>();
+        this._clientSeqs = new HashMap<Integer, Integer>();
 
 
 
@@ -70,6 +70,10 @@ public class Server implements KVPaxosRMI {
         }
     }
 
+    public void Kill(){
+        px.Kill();
+    }
+
 
     // RMI handlers
     public Response Get(Request req){
@@ -78,20 +82,23 @@ public class Server implements KVPaxosRMI {
         try{
             while(true){
                 // For multiple clients, get a key from req instead
-                if(_clientSeqs.containsKey("Client0") &&
-                   req.op.ClientSeq <= _clientSeqs.get("Client0")){
-                    break; // ignore duplicated operations
+                if(_clientSeqs.containsKey(req.clientId) &&
+                   req.op.ClientSeq <= _clientSeqs.get(req.clientId)){
+                    return new Response(_kvs.get(req.op.key));
+                    //Assume client only retry if it did not get the value
+                    //so even this time server responses a different value
+                    //it doesn't matter
                 }
                 px.Start(seq, req.op);
                 Op op = wait(seq);
                 px.Done(seq);
                 seq++;
                 if(op.equals(req.op)){
-                    _clientSeqs.put("Client0", op.ClientSeq);
+                    _clientSeqs.put(req.clientId, op.ClientSeq);
                     return new Response(_kvs.get(req.op.key));
                 } else{
                     if(null != op){
-                        _clientSeqs.put("Client0", op.ClientSeq);
+                        _clientSeqs.put(req.clientId, op.ClientSeq);
                         if("Put" == op.op){
                             _kvs.put(op.key, op.value);
                         }
@@ -113,21 +120,22 @@ public class Server implements KVPaxosRMI {
         try{
             while(true){
                 // For multiple clients, get a key from req instead
-                if(_clientSeqs.containsKey("Client0") &&
-                   req.op.ClientSeq <= _clientSeqs.get("Client0")){
-                    break; // ignore duplicated operations
+                if(_clientSeqs.containsKey(req.clientId) &&
+                   req.op.ClientSeq <= _clientSeqs.get(req.clientId)){
+                    return new Response(req.op.value);
+                    // so client knows it's done
                 }
                 px.Start(seq, req.op);
                 Op op = wait(seq);
                 px.Done(seq);
                 seq++;
                 if(op.equals(req.op)){
-                    _clientSeqs.put("Client0", op.ClientSeq);
+                    _clientSeqs.put(req.clientId, op.ClientSeq);
                     _kvs.put(op.key, op.value);
                     return new Response(op.value);
                 } else{
                     if(null != op){
-                        _clientSeqs.put("Client0", op.ClientSeq);
+                        _clientSeqs.put(req.clientId, op.ClientSeq);
                         if("Put" == op.op){
                             _kvs.put(op.key, op.value);
                         }
