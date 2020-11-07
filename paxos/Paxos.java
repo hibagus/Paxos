@@ -81,7 +81,7 @@ public class Paxos implements PaxosRMI, Runnable{
         // Getter
         public State getAgreementState() {return this._agreementstate;}
         public int getHighestPropNumResponded() {return this._highestPropNumResponded;}
-        public int getHighestPropNumAccepted() {return this._highestPropNumResponded;}
+        public int getHighestPropNumAccepted() {return this._highestPropNumAccepted;}
         public Object getPropValwithHighestPropNumAccepted() {return this._propValwithHighestPropNumAccepted;}
         public Object getPropValAssigned() {return this._propValAssigned;}
 
@@ -416,7 +416,7 @@ public class Paxos implements PaxosRMI, Runnable{
 
         paxosAgreementInstance.lock();
         // Response OK only when proposal number from the request is higher than it has ever responded.
-        if(req.getPropNum() >= paxosAgreementInstance.getHighestPropNumResponded())
+        if(req.getPropNum() > paxosAgreementInstance.getHighestPropNumResponded())
         {
             paxosAgreementInstance.setHighestPropNumResponded(req.getPropNum());
             ResponseStatus = true;
@@ -450,6 +450,7 @@ public class Paxos implements PaxosRMI, Runnable{
         // Response OK only when proposal number from the request is higher than it has ever responded.
         if(req.getPropNum() >= paxosAgreementInstance.getHighestPropNumResponded())
         {
+            paxosAgreementInstance.setHighestPropNumResponded(req.getPropNum());
             paxosAgreementInstance.setHighestPropNumAccepted(req.getPropNum());
             paxosAgreementInstance.setpropValwithHighestPropNumAccepted(req.getPropVal());
             ResponseStatus = true;
