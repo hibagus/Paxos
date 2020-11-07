@@ -93,17 +93,6 @@ public class Paxos implements PaxosRMI, Runnable{
         public void setPropValAssigned(Object propValAssigned) {this._propValAssigned = propValAssigned;}
 
         // Other Public Method
-        public void advanceAgreementState()
-        {
-            switch(this._agreementstate)
-            {
-                case Pending   : {this._agreementstate = State.Decided; break;}
-                case Decided   : {this._agreementstate = State.Forgotten; break;}
-                case Forgotten : {this._agreementstate = State.Forgotten; break;}
-                default        : {this._agreementstate = this._agreementstate; break;}
-            }
-        }
-
         public void lock() {this._mutex.lock();}
         public void unlock() {this._mutex.unlock();}
     }
@@ -174,7 +163,7 @@ public class Paxos implements PaxosRMI, Runnable{
     // Thread ID can be reused if previous thread has been terminated.
     private Map<Long, Integer> _paxosAgreementThreads;
 
-    // This array is used to store the maximum sequence number for this peer.
+    // This is used to store the maximum sequence number for this peer.
     private int _maxSeq;
 
     // This array is used to store the maximum sequence number that have been seen from each Paxos Peers.
@@ -272,8 +261,6 @@ public class Paxos implements PaxosRMI, Runnable{
         // If Start() is called with a sequence number less than Min(), the Start() call should be ignored
         // Start() will begin proposer function in a dedicated thread.
 
-        // TODO: Handle existing sequence with different value
-
         // Check whether seq is less than Min().
         // if yes, then Start() should exit prematurely.
         if(seq < Min()) {return;}
@@ -286,6 +273,11 @@ public class Paxos implements PaxosRMI, Runnable{
 
         // Create new paxos Agreement Thread in which Agreement Instance will run
         Thread paxosAgreementThread = new Thread(this);
+        // Just to make sure that thread ID is always unique when mapped to seqNum
+        if(this._paxosAgreementThreads.containsKey(paxosAgreementThread.getId()))
+        {
+            this._paxosAgreementThreads.remove(paxosAgreementThread.getId());
+        }
         this._paxosAgreementThreads.put(paxosAgreementThread.getId(), seq);
 
         PaxosAgreementInstance paxosAgreementInstance;
@@ -390,7 +382,6 @@ public class Paxos implements PaxosRMI, Runnable{
                     this._maxSeqNumfromAllPaxosPeers[peerID] = PaxosPeerResponses[peerID].getMaxSeqNum();
                 }
             }
-
         }
     }
 
