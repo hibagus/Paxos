@@ -25,6 +25,7 @@ public class Server implements KVPaxosRMI {
     // Your definitions here
     int seq;
     private Map<String, Integer> _kvs;
+    private Map<String, Integer> _clientSeqs;
 
 
     public Server(String[] servers, int[] ports, int me){
@@ -36,6 +37,7 @@ public class Server implements KVPaxosRMI {
         // Your initialization code here
         this.seq = 0;
         this._kvs = new HashMap<String, Integer>();
+        this._clientSeqs = new HashMap<String, Integer>();
 
 
 
@@ -75,16 +77,27 @@ public class Server implements KVPaxosRMI {
         mutex.lock();
         try{
             while(true){
+                // For multiple clients, get a key from req instead
+                if(_clientSeqs.containsKey("Client0") &&
+                   req.op.ClientSeq <= _clientSeqs.get("Client0")){
+                    break; // ignore duplicated operations
+                }
                 px.Start(seq, req.op);
                 Op op = wait(seq);
+                px.Done(seq);
                 seq++;
                 if(op.equals(req.op)){
+                    _clientSeqs.put("Client0", op.ClientSeq);
                     return new Response(_kvs.get(req.op.key));
                 } else{
-                    if("Put" == op.op){
-                        _kvs.put(op.key, op.value);
+                    if(null != op){
+                        _clientSeqs.put("Client0", op.ClientSeq);
+                        if("Put" == op.op){
+                            _kvs.put(op.key, op.value);
+                        }
                     }
                 }
+                px.Min(); // will actually release
             }
         } catch(Exception e){
             e.printStackTrace();
@@ -99,17 +112,28 @@ public class Server implements KVPaxosRMI {
         mutex.lock();
         try{
             while(true){
+                // For multiple clients, get a key from req instead
+                if(_clientSeqs.containsKey("Client0") &&
+                   req.op.ClientSeq <= _clientSeqs.get("Client0")){
+                    break; // ignore duplicated operations
+                }
                 px.Start(seq, req.op);
                 Op op = wait(seq);
+                px.Done(seq);
                 seq++;
                 if(op.equals(req.op)){
+                    _clientSeqs.put("Client0", op.ClientSeq);
                     _kvs.put(op.key, op.value);
                     return new Response(op.value);
                 } else{
-                    if("Put" == op.op){
-                        _kvs.put(op.key, op.value);
+                    if(null != op){
+                        _clientSeqs.put("Client0", op.ClientSeq);
+                        if("Put" == op.op){
+                            _kvs.put(op.key, op.value);
+                        }
                     }
                 }
+                px.Min(); // will actually release
             }
         } catch(Exception e){
             e.printStackTrace();
