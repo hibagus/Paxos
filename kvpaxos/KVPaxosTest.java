@@ -1,3 +1,5 @@
+// (C) 2020 Qinzhe Wu (qw2699), Bagus Hanindhito (bh29293)
+
 package kvpaxos;
 
 import org.junit.Test;

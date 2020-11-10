@@ -1,3 +1,5 @@
+// (C) 2020 Bagus Hanindhito (bh29293), Qinzhe Wu (qw2699)
+
 package paxos;
 import java.io.Serializable;
 
