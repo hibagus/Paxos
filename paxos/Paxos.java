@@ -143,7 +143,7 @@ public class Paxos implements PaxosRMI, Runnable{
 
     private void removePaxosAgreementInstances(int minSeqNum)
     {
-        for (int seqNum : Set.copyOf(this._paxosAgreementInstances.keySet()))
+        for (int seqNum : this._paxosAgreementInstances.keySet())
         {
             if (seqNum < minSeqNum)
             {
@@ -496,6 +496,8 @@ public class Paxos implements PaxosRMI, Runnable{
         // Your code here
         this.mutex.lock();
         this._maxSeqNumfromAllPaxosPeers[this.me] = seq;
+        int minSeq = Arrays.stream(this._maxSeqNumfromAllPaxosPeers).min().getAsInt() + 1;
+        removePaxosAgreementInstances(minSeq);
         this.mutex.unlock();
     }
 
@@ -542,7 +544,6 @@ public class Paxos implements PaxosRMI, Runnable{
         // Your code here
         mutex.lock();
         int minSeq = Arrays.stream(this._maxSeqNumfromAllPaxosPeers).min().getAsInt() + 1;
-        removePaxosAgreementInstances(minSeq);
         mutex.unlock();
         return minSeq;
     }
